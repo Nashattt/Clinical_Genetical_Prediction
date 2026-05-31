@@ -1,0 +1,9 @@
+Flask
+pandas
+numpy
+scikit-learn
+lifelines
+firebase-admin
+python-dotenv
+huggingface-hub
+uvicorn[standard]

@@ -1,0 +1,17 @@
+# ignore venv and vscode
+.venv/
+.vscode/
+# ignore pycache__pycache__/
+# ignore log files*.log
+# ignore database files*.db
+# ignore env files*.env
+# ignore __pycache__/
+# ignore .DS_Store
+# ignore .idea/
+# ignore .vscode/
+# ignore .pytest_cache/
+# ignore .mypy_cache/
+# ignore .coverage
+
+Clinical_Genetical_Prediction_Web/Secrets
+

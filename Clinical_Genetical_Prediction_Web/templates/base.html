@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedHack Predictor | Survival Analysis</title>
+    <!-- Favicon for Light Mode -->
+    <link rel="icon" id="dynamicFavicon" type="image/x-icon" href="{{ url_for('static', filename='imgs/Favicon_Light.png') }}" media="(prefers-color-scheme: light)" />
+
+    
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  </head>
+  <body>
+    <div class="theme-toggle-wrapper">
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="light-icon" >☀️</span>
+        <span class="dark-icon" hidden>🌙</span>
+      </button>
+    </div>
+
+    <main>
+      {% block content %}
+      {% endblock %}
+    </main>
+
+    <script>
+
+        // ----- FAVICON DEFINITIONS (inline SVG for simplicity) ----- 
+        const lightFaviconURL = "{{ url_for('static', filename='imgs/Favicon_Light.png') }}";
+        const darkFaviconURL = "{{ url_for('static', filename='imgs/Favicon_Dark.png') }}";
+        
+        function setFavicon(theme) {
+            const faviconLink = document.getElementById('dynamicFavicon');
+            faviconLink.href = theme === 'dark' ? darkFaviconURL : lightFaviconURL;
+        }
+        
+        // ----- THEME TOGGLE WITH ANIMATION -----
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        
+        function setTheme(theme) {
+            // Add animation class to button
+            themeToggle.classList.add('theme-animate');
+            
+            if (theme === 'dark') {
+                root.classList.add('dark');
+                root.classList.remove('light');
+                localStorage.setItem('theme', 'dark');
+                setFavicon('dark');
+                themeToggle.querySelector('.dark-icon').hidden = false;
+                themeToggle.querySelector('.light-icon').hidden = true;
+            } else {
+                root.classList.add('light');
+                root.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                setFavicon('light');
+                themeToggle.querySelector('.dark-icon').hidden = true;
+                themeToggle.querySelector('.light-icon').hidden = false;
+            }
+            
+            // Remove animation class after it finishes
+            setTimeout(() => {
+                themeToggle.classList.remove('theme-animate');
+            }, 300);
+        }
+        
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isDark = root.classList.contains('dark');
+                setTheme(isDark ? 'light' : 'dark');
+            });
+        }
+    </script>
+    
+    {% block scripts %}
+    {% endblock %}
+  </body>
+</html>

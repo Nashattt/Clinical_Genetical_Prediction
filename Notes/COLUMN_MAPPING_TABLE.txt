@@ -1,0 +1,133 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                         COLUMN NAME MAPPING TABLE                         ║
+║                    What you get in merged_*_final.csv                     ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1: IDENTIFIERS (All Merges)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Column Name              | Source       | Type   | Description
+────────────────────────┼──────────────┼────────┼─────────────────────────
+sample_id               | Clinical     | String | Patient Sample ID
+study_id                | Clinical     | String | Study/Cohort ID  
+patient_id              | Clinical     | String | Patient ID
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2: CLINICAL FEATURES (Original - Real Values)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Column Name                    | Source   | Type    | Description
+───────────────────────────────┼──────────┼─────────┼──────────────────────────
+age_clinical                   | Clinical | Float   | Patient age at diagnosis
+overall_survival_clinical      | Clinical | Float   | Overall survival (months)
+survival_status_clinical       | Clinical | Int     | Alive=1, Dead=0 (encoded)
+stage_data_clinical            | Clinical | Int     | Cancer stage (encoded)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3: DNA FEATURES (Original - Real Values)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Column Name                    | Source | Type    | Description
+───────────────────────────────┼────────┼─────────┼──────────────────────────
+total_mutations_dna            | DNA    | Int     | Total mutations per sample
+missense_mutations_dna         | DNA    | Int     | Count of missense mutations
+high_impact_mutations_dna      | DNA    | Int     | Count of HIGH impact mutations
+sequencing_phase_dna           | DNA    | Int     | Phase of sequencing (encoded)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4A: TRANSFORMED FEATURES - PCA ONLY (merged_pca_final.csv)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Column Name              | Type    | Derived From              | Description
+────────────────────────┼─────────┼──────────────────────────┼──────────────────────
+PCA_1_clinical          | Float   | All 4 clinical features   | 1st principal component
+PCA_2_clinical          | Float   | All 4 clinical features   | 2nd principal component
+PCA_1_dna               | Float   | All 4 DNA features        | 1st principal component
+PCA_2_dna               | Float   | All 4 DNA features        | 2nd principal component
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4B: SELECTED FEATURES - GA ONLY (merged_ga_final.csv)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Only the features that Genetic Algorithm selected as most important:
+
+Clinical: 2 features selected (e.g., age + overall_survival)
+DNA: 3 features selected (e.g., total_mutations + missense + high_impact)
+
+Exact columns depend on GA run (randomized)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4C: HYBRID FEATURES - PCA + GA (merged_pca_ga_final.csv)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GA selects best PCA components:
+
+Clinical: 2 PCA components selected
+DNA: 2 PCA components selected
+
+Reduces to 4 dimensions (best for ML efficiency)
+
+
+════════════════════════════════════════════════════════════════════════════
+
+SUMMARY TABLE: COLUMN COUNT BY FILE
+
+File                              | Total Cols | IDs | Clinical | DNA | Transformed
+──────────────────────────────────┼────────────┼─────┼──────────┼─────┼─────────────
+merged_pca_final.csv              |     15     |  3  |    4     |  4  |     4
+merged_ga_final.csv               |     9-10   |  3  |   2-3    | 2-3 |     0
+merged_pca_ga_final.csv           |     10     |  3  |   2-3    | 2-3 |     2
+
+════════════════════════════════════════════════════════════════════════════
+
+MAPPING BY FILE TYPE
+
+┌─ merged_pca_final.csv
+│  ├─ IDs: sample_id, study_id, patient_id
+│  ├─ Clinical Original: age, overall_survival, survival_status, stage_data
+│  ├─ DNA Original: total_mutations, missense_mutations, high_impact_mutations, sequencing_phase
+│  └─ PCA Transformed: PCA_1_clinical, PCA_2_clinical, PCA_1_dna, PCA_2_dna
+│
+├─ merged_ga_final.csv
+│  ├─ IDs: sample_id, study_id, patient_id
+│  ├─ Clinical Selected: (only features GA picked)
+│  └─ DNA Selected: (only features GA picked)
+│
+└─ merged_pca_ga_final.csv
+   ├─ IDs: sample_id, study_id, patient_id
+   ├─ Clinical Original: (subset GA selected from PCA)
+   ├─ DNA Original: (subset GA selected from PCA)
+   └─ Hybrid Transformed: PCA components + GA selection
+
+════════════════════════════════════════════════════════════════════════════
+
+HOW TO USE THIS MAPPING:
+
+1. IDENTIFY WHAT YOU HAVE:
+   ✓ Row = 1 patient sample
+   ✓ Columns = different features/measurements
+   ✓ All values are standardized (mean=0, std=1)
+
+2. CHOOSE YOUR FEATURES:
+   For Machine Learning Models:  Use PCA versions (4 columns, cleaner)
+   For Correlation Analysis:     Use original versions (interpretable)
+   For Feature Importance:       Use GA selected versions (best predictors)
+
+3. EXAMPLE ANALYSIS:
+   Question: "Does high mutation count → worse survival?"
+   Use: total_mutations_dna vs overall_survival_clinical
+   Calculate: correlation coefficient
+
+4. WHAT'S IN EACH COLUMN:
+   Clinical Features = Patient characteristics
+   DNA Features = Tumor genetic characteristics  
+   IDs = Patient/sample identifiers
+   Transformed = Mathematical combinations
+
+════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,20 @@
+flask_survival_app/
+├── app.py                      # Main Flask application
+├── requirements.txt            # Python dependencies
+├── firebase_credentials.json   # Your Firebase service account key (not included)
+├── Transformers/               # Your saved models
+│   ├── pca_clinical.pkl
+│   ├── pca_dna.pkl
+│   ├── scaler_clinical.pkl
+│   └── scaler_dna.pkl
+├── best_cox_model_pca_ga.pkl   # Cox model
+├── static/
+│   ├── css/
+│   │   └── style.css           # Styling with theme support
+│   ├── js/
+│   │   └── main.js             # Client-side logic & Firebase auth
+│   └── favicon.ico             # Custom favicon
+└── templates/
+    ├── base.html               # Base template with theme toggle
+    ├── login.html              # Login/signup page
+    └── dashboard.html          # Main prediction dashboard

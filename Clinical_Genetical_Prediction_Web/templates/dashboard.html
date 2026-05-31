@@ -1,0 +1,969 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-pro">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="medical-cross">⚕️</span>
+            <span>[MedHack]</span>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="active"><a href="#dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li><a href="#analytics"><span class="nav-icon">📈</span> Analytics</a></li>
+                <li><a href="#history"><span class="nav-icon">📜</span> History</a></li>
+                <li class="divider"></li>
+                <li><a href="#logout" id="sidebarLogout"><span class="nav-icon">🚪</span> Logout</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="dashboard-header">
+            <div class="user-info">
+                <span class="user-name" id="userNameDisplay">User</span>
+                <div class="avatar">👤</div>
+            </div>
+        </header>
+
+        <!-- ========== DASHBOARD VIEW ========== -->
+        <div id="view-dashboard" class="view-panel active">
+            <!-- Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Model Accuracy</div>
+                    <div class="metric-value">95.7<span class="small">%</span></div>
+                    <div class="metric-trend up">+2.1% ↑</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Concordance Index</div>
+                    <div class="metric-value">0.7589</div>
+                    <div class="metric-trend up">+0.03 ↑</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Total Predictions</div>
+                    <div class="metric-value" id="totalPredictions">0</div>
+                    <div class="metric-trend up">+12 ↑</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">High Risk Flagged</div>
+                    <div class="metric-value" id="highRiskCount">0</div>
+                    <div class="metric-trend down">-2% ↓</div>
+                </div>
+            </div>
+
+            <!-- Two-Column Layout -->
+            <div class="dashboard-grid">
+                <!-- Left Column: Prediction Form -->
+                <div class="col-left">
+                    <div class="card prediction-card">
+                        <div class="card-header" style="flex-direction:column;align-items:flex-start;gap:10px">
+                            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                                <h3>🩺 New Patient Analysis</h3>
+                                <!-- Risk preset buttons -->
+                                <div class="preset-btns">
+                                    <button class="preset-btn low"    onclick="applyPreset('low')"    title="Load Low Risk defaults">🟢 Low</button>
+                                    <button class="preset-btn median" onclick="applyPreset('median')" title="Load Median Risk defaults">🟡 Median</button>
+                                    <button class="preset-btn high"   onclick="applyPreset('high')"   title="Load High Risk defaults">🔴 High</button>
+                                </div>
+                            </div>
+                            <!-- Tabs -->
+                            <div class="form-tabs">
+                                <button class="form-tab active" onclick="switchTab('clinical',this)">🏥 Clinical</button>
+                                <button class="form-tab"        onclick="switchTab('dna',this)">🧬 DNA Features</button>
+                            </div>
+                        </div>
+
+                        <div class="card-body" style="overflow-y:auto;max-height:560px;padding-right:4px">
+
+                            <!-- ══ TAB: CLINICAL ══ -->
+                            <div id="tab-clinical" class="tab-panel active">
+                                <div class="form-section-label">👤 Demographics</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Age (years)</label><input type="number" id="age" step="0.1" class="neo-input"></div>
+                                    <div class="input-group"><label>Sex</label><select id="sex" class="neo-select">
+                                        <option value="0">Female</option>
+                                        <option value="1">Male</option>
+                                    </select></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Race</label><select id="race" class="neo-select">
+                                        <option value="0">White</option>
+                                        <option value="1">Black / African American</option>
+                                        <option value="2">Asian</option>
+                                        <option value="3">Hispanic / Latino</option>
+                                        <option value="4">Other / Unknown</option>
+                                    </select></div>
+                                    <div class="input-group"><label>Tumor Stage</label><select id="stage" class="neo-select">
+                                        <option value="0">Stage 0</option>
+                                        <option value="1">Stage I</option>
+                                        <option value="2" selected>Stage II</option>
+                                        <option value="3">Stage III</option>
+                                    </select></div>
+                                </div>
+
+                                <div class="form-section-label">📊 TMB &amp; Genome</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>TMB</label><input type="number" id="tmb" step="0.01" class="neo-input"></div>
+                                    <div class="input-group"><label>TMB (nonsynonymous)</label><input type="number" id="tmbNonsyn" step="0.01" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Fraction Genome Altered</label><input type="number" id="fractionGenomeAltered" step="0.001" class="neo-input"></div>
+                                    <div class="input-group"><label>Aneuploidy Score</label><input type="number" id="aneuploidyScore" step="0.01" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Mutation Count</label><input type="number" id="mutationCount" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">🔬 Hypoxia &amp; MSI</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Buffa Hypoxia Score</label><input type="number" id="buffaHypoxia" step="0.01" class="neo-input"></div>
+                                    <div class="input-group"><label>Ragnum Hypoxia Score</label><input type="number" id="ragnumHypoxia" step="0.01" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Winter Hypoxia Score</label><input type="number" id="winterHypoxia" step="0.01" class="neo-input"></div>
+                                    <div class="input-group"><label>MSI MANTIS Score</label><input type="number" id="msiMantis" step="0.001" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>MSIsensor Score</label><input type="number" id="msiSensor" step="0.01" class="neo-input"></div>
+                                </div>
+                            </div>
+
+                            <!-- ══ TAB: DNA FEATURES ══ -->
+                            <div id="tab-dna" class="tab-panel">
+                                <div class="form-section-label">🧬 Mutation Burden</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Total Mutations</label><input type="number" id="totalMutations" class="neo-input"></div>
+                                    <div class="input-group"><label>Unique Genes</label><input type="number" id="uniqueGenes" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Unique Chromosomes</label><input type="number" id="uniqueChromosomes" class="neo-input"></div>
+                                    <div class="input-group"><label>Missense Mutations</label><input type="number" id="missenseMutations" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Silent Mutations</label><input type="number" id="silentMutations" class="neo-input"></div>
+                                    <div class="input-group"><label>High Impact Mutations</label><input type="number" id="highImpactMutations" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">⚡ Functional Impact</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n MODERATE Impact</label><input type="number" id="nModerateImpact" class="neo-input"></div>
+                                    <div class="input-group"><label>n LOW Impact</label><input type="number" id="nLowImpact" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n MODIFIER Impact</label><input type="number" id="nModifierImpact" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean Impact (0-3)</label><input type="number" id="meanImpactOrd" step="0.01" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">🔬 Allele &amp; Sequencing</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Mean VAF</label><input type="number" id="meanVAF" step="0.001" class="neo-input"></div>
+                                    <div class="input-group"><label>Max VAF</label><input type="number" id="maxVAF" step="0.001" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Mean Tumor Depth</label><input type="number" id="meanTDepth" step="0.1" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean Normal Depth</label><input type="number" id="meanNDepth" step="0.1" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">🧪 Protein Damage</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n Probably Damaging</label><input type="number" id="nProbablyDamaging" class="neo-input"></div>
+                                    <div class="input-group"><label>n Possibly Damaging</label><input type="number" id="nPossiblyDamaging" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n Deleterious (SIFT)</label><input type="number" id="nDeleteriousSift" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean PolyPhen Score</label><input type="number" id="meanPpScore" step="0.001" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">🗄️ Database &amp; Annotation</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>COSMIC Hits</label><input type="number" id="nCosmicHits" class="neo-input"></div>
+                                    <div class="input-group"><label>Rare Population Variants</label><input type="number" id="nRarePopulation" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n With Protein Domain</label><input type="number" id="nWithDomain" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean N-Callers</label><input type="number" id="meanNCallers" step="0.1" class="neo-input"></div>
+                                </div>
+                            </div>
+
+                            <button id="predictBtn" class="predict-btn" style="margin-top:16px">Run Prediction →</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Real-time Feed -->
+                <div class="col-right">
+                    <div class="card feed-card">
+                        <div class="card-header">
+                            <h3>🔄 Real-time Feed</h3><span class="live-badge">LIVE</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="realtimeFeed" class="realtime-feed">
+                                <div class="empty">No recent predictions yet.</div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="card results-card">
+                        <div class="card-header">
+                            <h3>📊 Risk Assessment</h3><button id="copyResultBtn" class="icon-btn"
+                                style="background: none;">📋</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="resultsContainer" class="results-container">
+                                <div class="placeholder">Awaiting analysis...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========== ANALYTICS VIEW ========== -->
+        <div id="view-analytics" class="view-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🧬 3D DNA Mutation Visualizer</h3>
+                </div>
+                <div class="card-body">
+                    <div id="dnaCanvasContainer"
+                        style="width:100%; height:400px; background:#0a0a0f; border-radius:16px;"></div>
+                    <div id="dnaPlaceholderMsg"
+                        style="text-align:center;margin-top:12px;padding:8px;background:rgba(0,255,157,0.1);border-radius:8px;color:var(--accent-green);font-size:0.9rem;">
+                        💡 <strong>Click any prediction log</strong> to visualize its mutation profile in 3D.
+                    </div>
+                    <div id="variantProbPanel" style="display:none;margin-top:16px">
+                        <div style="font-size:0.7rem;letter-spacing:.1em;color:#888;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:6px">
+                            Predicted Variant Probabilities
+                        </div>
+                        <div id="variantProbBars"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- ========== HISTORY VIEW (full history with table) ========== -->
+        <div id="view-history" class="view-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📜 Full Prediction History</h3>
+                    <button id="exportHistoryBtn" class="icon-btn" style="background: none;">📎 Export CSV</button>
+                </div>
+                <div class="card-body">
+                    <div style="overflow-x: auto;">
+                        <table id="historyTable" class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Age</th>
+                                    <th>Stage</th>
+                                    <th>Total Mut</th>
+                                    <th>Missense</th>
+                                    <th>High Impact</th>
+                                    <th>Risk Score</th>
+                                    <th>Risk Category</th>
+                                    <th>Med. Survival (mo)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullHistoryList">
+                                <tr>
+                                    <td colspan="9" class="loading">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </main>
+</div>
+
+
+<style>
+.form-section-label {
+    font-size: 0.7rem;
+    letter-spacing: .1em;
+    color: var(--accent-green, #00ff9d);
+    text-transform: uppercase;
+    margin: 14px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0,255,157,0.15);
+}
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.input-row .input-group {
+    margin-bottom: 6px;
+}
+/* ── Form Tabs ── */
+.form-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 0;
+    width: 100%;
+}
+.form-tab {
+    padding: 6px 16px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #666;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    letter-spacing: .04em;
+    transition: color .2s, border-color .2s;
+    margin-bottom: -1px;
+}
+.form-tab:hover { color: #aaa; }
+.form-tab.active {
+    color: #00ff9d;
+    border-bottom-color: #00ff9d;
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+/* ── Preset Buttons ── */
+.preset-btns {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.preset-btn {
+    padding: 4px 11px;
+    border-radius: 20px;
+    border: 1px solid;
+    background: none;
+    font-size: 0.74rem;
+    font-family: inherit;
+    cursor: pointer;
+    letter-spacing: .03em;
+    transition: background .18s, color .18s;
+    white-space: nowrap;
+}
+.preset-btn.low    { border-color: #00ff9d; color: #00ff9d; }
+.preset-btn.median { border-color: #ffaa44; color: #ffaa44; }
+.preset-btn.high   { border-color: #ff3366; color: #ff3366; }
+.preset-btn.low:hover    { background: rgba(0,255,157,0.12); }
+.preset-btn.median:hover { background: rgba(255,170,68,0.12); }
+.preset-btn.high:hover   { background: rgba(255,51,102,0.12); }
+</style>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+
+
+<script>
+ let dnaLoaded = false;
+
+// Firebase config
+const firebaseConfig = {
+    apiKey: 'AIzaSyBrFwAlUV-zenHDuBx3qLqJLjUuroPnNSA',
+    databaseURL: 'https://dna-scan-default-rtdb.europe-west1.firebasedatabase.app',
+    authDomain: 'dna-scan.firebaseapp.com',
+    projectId: 'dna-scan',
+    storageBucket: 'dna-scan.firebasestorage.app',
+    messagingSenderId: '656038016719',
+    appId: '1:656038016719:web:e4071d52050eb4626ea9ba'
+};
+firebase.initializeApp(firebaseConfig);
+const rtDb = firebase.database();
+
+// Helper API call
+async function apiCall(endpoint, method, body) {
+    const response = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    return response.json();
+}
+
+async function loadUserName() {
+    const response = await apiCall('/api/get_profile', 'GET', null);
+    if (response.success && response.profile && response.profile.name) {
+        document.getElementById('userNameDisplay').innerText = response.profile.name;
+    }
+}
+
+// Render variant probability bars in analytics panel
+function renderVariantPanel(variantProbs) {
+    const panel = document.getElementById('variantProbPanel');
+    const barsDiv = document.getElementById('variantProbBars');
+    if (!panel || !barsDiv || !variantProbs) return;
+
+    const colorMap = {
+        "3'UTR"            : '#818cf8',
+        "5'UTR"            : '#a78bfa',
+        'Frame_Shift_Del'  : '#ff3366',
+        'Frame_Shift_Ins'  : '#ff6655',
+        'In_Frame_Del'     : '#fbbf24',
+        'In_Frame_Ins'     : '#f59e0b',
+        'Intron'           : '#38bdf8',
+        'Missense_Mutation': '#ffaa44',
+        'Nonsense_Mutation': '#ff3366',
+        'Silent'           : '#00ff9d',
+        'Splice_Site'      : '#ff6644',
+    };
+
+    const entries = Object.entries(variantProbs).sort((a, b) => b[1] - a[1]);
+    barsDiv.innerHTML = entries.map(([name, prob]) => {
+        const pct = Math.round(prob * 100);
+        const col = colorMap[name] || '#94a3b8';
+        return `<div style="margin-bottom:9px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+                <span style="font-size:0.82rem;color:#e2e8f0;font-family:'Fira Code',monospace">${name}</span>
+                <span style="font-size:0.82rem;font-weight:600;color:${col}">${(prob*100).toFixed(1)}%</span>
+            </div>
+            <div style="background:#1e1e2e;border-radius:6px;height:7px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:${col};border-radius:6px;
+                            box-shadow:0 0 6px ${col}55;transition:width .5s ease"></div>
+            </div>
+        </div>`;
+    }).join('');
+    panel.style.display = 'block';
+}
+
+// Update 3D DNA from patient data
+// accepts optional result object for variant probs
+function updateDNAFromPrediction(input, result) {
+    const msgDiv = document.getElementById('dnaPlaceholderMsg');
+    if (msgDiv) msgDiv.style.display = 'none';
+    if (window.updateDNAFromData) {
+        window.updateDNAFromData({
+            totalMutations   : input.total_mutations   || 150,
+            variantProbs     : (result && result.variant_probabilities) || {},
+        });
+    } else {
+        console.warn('DNA visualizer not loaded yet');
+    }
+    if (result && result.variant_probabilities) {
+        renderVariantPanel(result.variant_probabilities);
+    }
+}
+
+// Display results
+function displayResults(result, inputData) {
+    const container = document.getElementById('resultsContainer');
+    const riskClass = result.risk_category.toLowerCase().replace(/ /g, '-');
+
+    // Survival block
+    const survivalHtml = result.median_survival_months
+        ? `<div class="result-item">⏱ Median Survival: <strong>${result.median_survival_months} mo</strong> (${result.median_survival_years} yr)</div>`
+        : '<div class="result-item" style="color:#888">Median survival: beyond model range</div>';
+
+    // Variant probabilities (from model output)
+    let variantHtml = '';
+    if (result.variant_probabilities) {
+        const vp = result.variant_probabilities;
+        const colorMap = {
+            'Missense_Mutation': '#ffaa44', 'Nonsense_Mutation': '#ff3366',
+            'Frame_Shift_Del': '#ff3366',   'Frame_Shift_Ins': '#ff3366',
+            'Splice_Site': '#ff6644',       'In_Frame_Del': '#ffcc44',
+            'Silent': '#00ff9d',            "3'UTR": '#33cc99',
+            "5'UTR": '#33cc99',             'Intron': '#44aaff'
+        };
+        variantHtml = `<div style="margin:12px 0 4px">
+            <div style="font-size:0.7rem;color:#888;margin-bottom:6px;letter-spacing:.08em">PREDICTED VARIANT PROBABILITIES</div>` +
+            Object.entries(vp).map(([name, prob]) => {
+                const pct = Math.round(prob * 100);
+                const col = colorMap[name] || '#888';
+                return `<div style="margin-bottom:5px">
+                    <div style="display:flex;justify-content:space-between;font-size:0.76rem;margin-bottom:2px">
+                        <span style="color:#ccc">${name}</span>
+                        <span style="color:${col}">${(prob*100).toFixed(1)}%</span>
+                    </div>
+                    <div style="background:#1a1a2e;border-radius:4px;height:5px;overflow:hidden">
+                        <div style="width:${pct}%;height:100%;background:${col};border-radius:4px;transition:width .6s ease"></div>
+                    </div>
+                </div>`;
+            }).join('') +
+        `</div>`;
+    } else if (inputData) {
+        // Fallback: derive from raw counts
+        const total = inputData.total_mutations || 1;
+        const bars = [
+            { label: 'High Impact', val: inputData.high_impact_mutations || 0, color: '#ff3366' },
+            { label: 'Missense',    val: inputData.missense_mutations    || 0, color: '#ffaa44' },
+            { label: 'Silent/Other',val: Math.max(0, total - (inputData.missense_mutations||0) - (inputData.high_impact_mutations||0)), color: '#00ff9d' }
+        ];
+        variantHtml = '<div style="margin:12px 0 4px">' + bars.map(b => {
+            const pct = Math.round((b.val / total) * 100);
+            return `<div style="margin-bottom:5px">
+                <div style="display:flex;justify-content:space-between;font-size:0.76rem;margin-bottom:2px">
+                    <span style="color:#ccc">${b.label}</span><span style="color:${b.color}">${b.val} (${pct}%)</span>
+                </div>
+                <div style="background:#1a1a2e;border-radius:4px;height:5px;overflow:hidden">
+                    <div style="width:${pct}%;height:100%;background:${b.color};border-radius:4px"></div>
+                </div>
+            </div>`;
+        }).join('') + '</div>';
+    }
+
+    // Predicted stage block
+    const stageHtml = result.predicted_stage
+        ? `<div class="result-item">🔬 Predicted Stage: <strong>${result.predicted_stage}</strong> <span style="color:#666;font-size:0.8rem">(${result.stage_confidence}% conf.)</span></div>`
+        : '';
+
+    // Risk score gauge (0-3+ scale)
+    const gaugeMax  = 3.0;
+    const gaugePct  = Math.min(100, (result.risk_score / gaugeMax) * 100).toFixed(1);
+    const gaugeColor = result.risk_score > 2.0 ? '#ff3366'
+                     : result.risk_score > 1.5 ? '#ff6644'
+                     : result.risk_score > 1.0 ? '#ffaa44' : '#00ff9d';
+
+    const riskGauge = `<div style="margin:10px 0 14px">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#888;margin-bottom:4px">
+            <span>RISK SCORE</span><span style="color:${gaugeColor}">${result.risk_score}</span>
+        </div>
+        <div style="background:#1a1a2e;border-radius:6px;height:10px;overflow:hidden">
+            <div style="width:${gaugePct}%;height:100%;background:${gaugeColor};border-radius:6px;
+                        box-shadow:0 0 8px ${gaugeColor};transition:width .6s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#444;margin-top:2px">
+            <span>0</span><span>Low</span><span>Moderate</span><span>High</span><span>3+</span>
+        </div>
+    </div>`;
+
+    container.innerHTML = `<div class="result-card ${riskClass}">
+        <div class="risk-category" style="font-size:1.1rem;font-weight:700;margin-bottom:8px">${result.risk_category}</div>
+        ${riskGauge}
+        ${stageHtml}
+        ${survivalHtml}
+        ${variantHtml}
+        <div class="model-info" style="margin-top:10px;font-size:0.75rem;color:#555">Model C-index: 0.7589</div>
+        <button onclick="showView('analytics')" style="margin-top:12px;width:100%;padding:8px;
+            background:rgba(0,255,157,0.1);border:1px solid #00ff9d;border-radius:8px;
+            color:#00ff9d;cursor:pointer;font-family:inherit;font-size:0.85rem;letter-spacing:.05em">
+            🧬 Visualize in 3D →
+        </button>
+    </div>`;
+    updateMetrics();
+}
+
+// Update metrics (total predictions & high risk count)
+async function updateMetrics() {
+    const historyRes = await apiCall('/api/history', 'GET', null);
+    if (historyRes.success && historyRes.history) {
+        const total = historyRes.history.length;
+        const highRisk = historyRes.history.filter(h => h.result.risk_category === 'HIGH RISK' || h.result.risk_category === 'VERY HIGH RISK').length;
+        document.getElementById('totalPredictions').innerText = total;
+        document.getElementById('highRiskCount').innerText = highRisk;
+    }
+}
+
+// Load full history (History view) as a table
+async function loadFullHistory() {
+    const response = await apiCall('/api/history', 'GET', null);
+    const tbody = document.getElementById('fullHistoryList');
+    if (response.success && response.history.length > 0) {
+        let html = '';
+        response.history.forEach(item => {
+            const timestamp = new Date(item.timestamp).toLocaleString();
+            const survival = item.result.median_survival_months || '—';
+            const riskClass = item.result.risk_category.toLowerCase().replace(/ /g, '-');
+            html += `
+                <tr class="clickable-row" data-input='${JSON.stringify(item.input)}' data-result='${JSON.stringify(item.result || {})}'>
+                    <td>${timestamp}</td>
+                    <td>${item.input.age}</td>
+                    <td>${item.input.stage_data}</td>
+                    <td>${item.input.total_mutations}</td>
+                    <td>${item.input.missense_mutations}</td>
+                    <td>${item.input.high_impact_mutations}</td>
+                    <td>${item.result.risk_score}</td>
+                    <td class="risk-${riskClass}">${item.result.risk_category}</td>
+                    <td>${survival}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+        // Attach click handlers to rows
+        document.querySelectorAll('#fullHistoryList .clickable-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const input  = JSON.parse(row.dataset.input  || '{}');
+                const result = JSON.parse(row.dataset.result || '{}');
+                updateDNAFromPrediction(input, result);
+                showView('analytics');
+            });
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">No history found</td></tr>';
+    }
+}
+
+// Export to CSV
+document.getElementById('exportHistoryBtn')?.addEventListener('click', async () => {
+    const response = await apiCall('/api/history', 'GET', null);
+    if (!response.success || !response.history.length) {
+        alert('No data to export');
+        return;
+    }
+    const headers = ['Timestamp', 'Age', 'Stage', 'Total Mutations', 'Missense', 'High Impact', 'Risk Score', 'Risk Category', 'Median Survival (months)'];
+    const rows = response.history.map(item => [
+        new Date(item.timestamp).toLocaleString(),
+        item.input.age,
+        item.input.stage_data,
+        item.input.total_mutations,
+        item.input.missense_mutations,
+        item.input.high_impact_mutations,
+        item.result.risk_score,
+        item.result.risk_category,
+        item.result.median_survival_months || ''
+    ]);
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `medhack_history_${new Date().toISOString().slice(0, 19)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// Real-time feed
+const seenFeedIds = new Set();
+let currentFeedUid = null;
+
+function buildFeedItem(data, key) {
+    const feedDiv = document.getElementById('realtimeFeed');
+    if (!feedDiv || !data || !data.result || !data.input) return;
+    if (seenFeedIds.has(key)) return;
+    seenFeedIds.add(key);
+
+    if (feedDiv.querySelector('.empty')) feedDiv.innerHTML = '';
+
+    const logLine = document.createElement('div');
+    logLine.className = 'log-line clickable';
+    logLine.setAttribute('data-input', JSON.stringify(data.input));
+    logLine.setAttribute('data-result', JSON.stringify(data.result || {}));
+    logLine.style.cssText = 'position:relative;padding-right:32px';
+
+    const riskColor = data.result.risk_category?.includes('HIGH') ? '#ff3366'
+                    : data.result.risk_category?.includes('MODERATE') ? '#ffaa44' : '#00ff9d';
+
+    logLine.innerHTML = `
+        <span class="log-time">[${new Date(data.timestamp).toLocaleTimeString()}]</span>
+        <span class="log-risk" style="color:${riskColor}">● ${data.result.risk_category}</span>
+        <span class="log-details">Age:${data.input.age} | Stage:${data.input.stage_data} | Mut:${data.input.total_mutations}</span>
+        <button class="feed-delete-btn" title="Delete" style="
+            position:absolute;right:6px;top:50%;transform:translateY(-50%);
+            background:none;border:none;color:#ff3366;cursor:pointer;
+            font-size:14px;opacity:0;transition:opacity .15s;padding:2px 6px;
+            border-radius:4px;line-height:1">✕</button>
+    `;
+
+    // Show delete btn on hover
+    logLine.addEventListener('mouseenter', () => logLine.querySelector('.feed-delete-btn').style.opacity = '1');
+    logLine.addEventListener('mouseleave', () => logLine.querySelector('.feed-delete-btn').style.opacity = '0');
+
+    // Delete handler
+    logLine.querySelector('.feed-delete-btn').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!currentFeedUid || !key) return;
+        try {
+            await rtDb.ref(`predictions/${currentFeedUid}/${key}`).remove();
+            logLine.style.transition = 'opacity .25s, max-height .3s';
+            logLine.style.opacity = '0';
+            logLine.style.maxHeight = '0';
+            logLine.style.overflow = 'hidden';
+            setTimeout(() => {
+                logLine.remove();
+                seenFeedIds.delete(key);
+                if (!document.getElementById('realtimeFeed').children.length) {
+                    document.getElementById('realtimeFeed').innerHTML = '<div class="empty">No recent predictions yet.</div>';
+                }
+            }, 320);
+            updateMetrics();
+        } catch (err) {
+            console.error('Delete failed:', err.message);
+        }
+    });
+
+    // Click row → update 3D (but not when clicking delete)
+    logLine.addEventListener('click', (e) => {
+        if (e.target.classList.contains('feed-delete-btn')) return;
+        updateDNAFromPrediction(JSON.parse(logLine.dataset.input), JSON.parse(logLine.dataset.result || '{}'));
+    });
+
+    feedDiv.appendChild(logLine);
+    feedDiv.scrollTop = feedDiv.scrollHeight;
+}
+
+function initRealTimeFeed(uid) {
+    if (!uid) return;
+    currentFeedUid = uid;
+
+    // 1. Pre-populate from server
+    apiCall('/api/history', 'GET', null).then(res => {
+        if (res.success && res.history.length) {
+            [...res.history].reverse().forEach(item => {
+                buildFeedItem({ result: item.result, input: item.input,
+                                timestamp: item.timestamp }, item.id);
+            });
+        }
+    });
+
+    // 2. Firebase listener for new entries
+    const feedRef = rtDb.ref(`predictions/${uid}`);
+    feedRef.limitToLast(5).on('child_added',
+        (snapshot) => buildFeedItem(snapshot.val(), snapshot.key),
+        (err) => console.error('Feed listener error:', err.code, err.message)
+    );
+}
+
+
+
+
+// Prediction button (main)
+document.getElementById('predictBtn').addEventListener('click', async () => {
+    const g = id => parseFloat(document.getElementById(id).value) || 0;
+    const gi = id => parseInt(document.getElementById(id).value) || 0;
+    const input = {
+        // Clinical
+        age:                     g('age'),
+        sex_encoded:             gi('sex'),
+        race_encoded:            gi('race'),
+        stage_data:              gi('stage'),
+        tmb:                     g('tmb'),
+        tmb_nonsynonymous:       g('tmbNonsyn'),
+        fraction_genome_altered: g('fractionGenomeAltered'),
+        aneuploidy_score:        g('aneuploidyScore'),
+        mutation_count:          gi('mutationCount'),
+        buffa_hypoxia_score:     g('buffaHypoxia'),
+        ragnum_hypoxia_score:    g('ragnumHypoxia'),
+        winter_hypoxia_score:    g('winterHypoxia'),
+        msi_mantis_score:        g('msiMantis'),
+        msisensor_score:         g('msiSensor'),
+        // DNA
+        total_mutations:         gi('totalMutations'),
+        unique_genes:            gi('uniqueGenes'),
+        unique_chromosomes:      gi('uniqueChromosomes'),
+        missense_mutations:      gi('missenseMutations'),
+        silent_mutations:        gi('silentMutations'),
+        high_impact_mutations:   gi('highImpactMutations'),
+        n_moderate_impact:       gi('nModerateImpact'),
+        n_low_impact:            gi('nLowImpact'),
+        n_modifier_impact:       gi('nModifierImpact'),
+        mean_impact_ord:         g('meanImpactOrd'),
+        mean_vaf:                g('meanVAF'),
+        max_vaf:                 g('maxVAF'),
+        mean_t_depth:            g('meanTDepth'),
+        mean_n_depth:            g('meanNDepth'),
+        n_probably_damaging:     gi('nProbablyDamaging'),
+        n_possibly_damaging:     gi('nPossiblyDamaging'),
+        n_deleterious_sift:      gi('nDeleteriousSift'),
+        mean_pp_score:           g('meanPpScore'),
+        n_cosmic_hits:           gi('nCosmicHits'),
+        n_rare_population:       gi('nRarePopulation'),
+        n_with_protein_domain:   gi('nWithDomain'),
+        mean_ncallers:           g('meanNCallers'),
+    };
+    if (!input.age || !input.total_mutations) return alert('Age and Total Mutations are required.');
+    const btn = document.getElementById('predictBtn');
+    const resultsContainer = document.getElementById('resultsContainer');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    resultsContainer.innerHTML = '<div class="loading-spinner">⏳ Running survival analysis...</div>';
+    try {
+        const response = await apiCall('/api/predict', 'POST', input);
+        if (response.success) {
+            displayResults(response.result, input);
+            updateDNAFromPrediction(input, response.result);   // keep 3D in sync automatically
+        } else resultsContainer.innerHTML = `<div class="error">Error: ${response.error}</div>`;
+    } catch (err) {
+        resultsContainer.innerHTML = '<div class="error">Network error. Please try again.</div>';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Prediction →';
+    }
+});
+
+// Copy result button
+document.getElementById('copyResultBtn').addEventListener('click', () => {
+    const resultText = document.getElementById('resultsContainer').innerText;
+    if (resultText && resultText !== 'Awaiting analysis...') {
+        navigator.clipboard.writeText(resultText);
+        alert('Result copied to clipboard');
+    }
+});
+
+// Sidebar navigation
+const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+const views = ['dashboard', 'analytics', 'history'];
+
+function showView(viewName) {
+    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+    const activePanel = document.getElementById(`view-${viewName}`);
+    if (activePanel) activePanel.classList.add('active');
+    sidebarLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        link.parentElement.classList.remove('active');
+        if (href === `#${viewName}`) link.parentElement.classList.add('active');
+    });
+    if (viewName === 'analytics' && !dnaLoaded) {
+        dnaLoaded = true;
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/static/js/dna3d.js';
+        document.body.appendChild(script);
+    }
+    if (viewName === 'history') loadFullHistory();
+}
+
+sidebarLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (href === '#logout') return;
+        e.preventDefault();
+        const viewName = href.substring(1);
+        if (views.includes(viewName)) showView(viewName);
+    });
+});
+
+// Logout
+document.getElementById('sidebarLogout').addEventListener('click', async () => {
+    await firebase.auth().signOut();
+    await apiCall('/api/logout', 'POST', {});
+    window.location.href = '/login';
+});
+
+
+// Wait for Firebase Auth and start feed
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        initRealTimeFeed(user.uid);  // pass uid directly — avoids currentUser race condition
+        loadUserName();
+        updateMetrics();
+    }
+});
+
+
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.form-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ── Risk presets ──────────────────────────────────────────────────────────────
+const PRESETS = {
+    low: {
+        // Clinical
+        age:60, sex:0, race:0, stage:1,
+        tmb:2.1, tmbNonsyn:1.8, fractionGenomeAltered:0.05,
+        aneuploidyScore:0.1, mutationCount:60,
+        buffaHypoxia:0, ragnumHypoxia:0, winterHypoxia:0,
+        msiMantis:0, msiSensor:0,
+        // DNA
+        totalMutations:60, uniqueGenes:40, uniqueChromosomes:8,
+        missenseMutations:40, silentMutations:12, highImpactMutations:1,
+        nModerateImpact:40, nLowImpact:12, nModifierImpact:8,
+        meanImpactOrd:1.2, meanVAF:0.18, maxVAF:0.32,
+        meanTDepth:120, meanNDepth:115,
+        nProbablyDamaging:10, nPossiblyDamaging:8,
+        nDeleteriousSift:18, meanPpScore:0.45,
+        nCosmicHits:0, nRarePopulation:55, nWithDomain:35, meanNCallers:3.5,
+    },
+    median: {
+        // Clinical
+        age:60, sex:0, race:0, stage:2,
+        tmb:5.2, tmbNonsyn:4.5, fractionGenomeAltered:0.15,
+        aneuploidyScore:0.5, mutationCount:150,
+        buffaHypoxia:0, ragnumHypoxia:0, winterHypoxia:0,
+        msiMantis:0, msiSensor:0,
+        // DNA
+        totalMutations:150, uniqueGenes:80, uniqueChromosomes:12,
+        missenseMutations:90, silentMutations:28, highImpactMutations:5,
+        nModerateImpact:90, nLowImpact:30, nModifierImpact:25,
+        meanImpactOrd:1.8, meanVAF:0.28, maxVAF:0.55,
+        meanTDepth:110, meanNDepth:105,
+        nProbablyDamaging:35, nPossiblyDamaging:20,
+        nDeleteriousSift:55, meanPpScore:0.72,
+        nCosmicHits:3, nRarePopulation:135, nWithDomain:80, meanNCallers:4.0,
+    },
+    high: {
+        // Clinical
+        age:72, sex:1, race:0, stage:3,
+        tmb:18.5, tmbNonsyn:16.2, fractionGenomeAltered:0.52,
+        aneuploidyScore:2.1, mutationCount:480,
+        buffaHypoxia:-12.3, ragnumHypoxia:-8.7, winterHypoxia:-10.1,
+        msiMantis:0.42, msiSensor:8.5,
+        // DNA
+        totalMutations:480, uniqueGenes:210, uniqueChromosomes:19,
+        missenseMutations:320, silentMutations:60, highImpactMutations:28,
+        nModerateImpact:320, nLowImpact:60, nModifierImpact:72,
+        meanImpactOrd:2.6, meanVAF:0.47, maxVAF:0.82,
+        meanTDepth:95, meanNDepth:88,
+        nProbablyDamaging:140, nPossiblyDamaging:75,
+        nDeleteriousSift:210, meanPpScore:0.91,
+        nCosmicHits:14, nRarePopulation:430, nWithDomain:260, meanNCallers:4.8,
+    }
+};
+
+function applyPreset(tier) {
+    const p = PRESETS[tier];
+    // Clinical tab
+    document.getElementById('age').value                  = p.age;
+    document.getElementById('sex').value                  = p.sex;
+    document.getElementById('race').value                 = p.race;
+    document.getElementById('stage').value                = p.stage;
+    document.getElementById('tmb').value                  = p.tmb;
+    document.getElementById('tmbNonsyn').value            = p.tmbNonsyn;
+    document.getElementById('fractionGenomeAltered').value= p.fractionGenomeAltered;
+    document.getElementById('aneuploidyScore').value      = p.aneuploidyScore;
+    document.getElementById('mutationCount').value        = p.mutationCount;
+    document.getElementById('buffaHypoxia').value         = p.buffaHypoxia;
+    document.getElementById('ragnumHypoxia').value        = p.ragnumHypoxia;
+    document.getElementById('winterHypoxia').value        = p.winterHypoxia;
+    document.getElementById('msiMantis').value            = p.msiMantis;
+    document.getElementById('msiSensor').value            = p.msiSensor;
+    // DNA tab
+    document.getElementById('totalMutations').value       = p.totalMutations;
+    document.getElementById('uniqueGenes').value          = p.uniqueGenes;
+    document.getElementById('uniqueChromosomes').value    = p.uniqueChromosomes;
+    document.getElementById('missenseMutations').value    = p.missenseMutations;
+    document.getElementById('silentMutations').value      = p.silentMutations;
+    document.getElementById('highImpactMutations').value  = p.highImpactMutations;
+    document.getElementById('nModerateImpact').value      = p.nModerateImpact;
+    document.getElementById('nLowImpact').value           = p.nLowImpact;
+    document.getElementById('nModifierImpact').value      = p.nModifierImpact;
+    document.getElementById('meanImpactOrd').value        = p.meanImpactOrd;
+    document.getElementById('meanVAF').value              = p.meanVAF;
+    document.getElementById('maxVAF').value               = p.maxVAF;
+    document.getElementById('meanTDepth').value           = p.meanTDepth;
+    document.getElementById('meanNDepth').value           = p.meanNDepth;
+    document.getElementById('nProbablyDamaging').value    = p.nProbablyDamaging;
+    document.getElementById('nPossiblyDamaging').value    = p.nPossiblyDamaging;
+    document.getElementById('nDeleteriousSift').value     = p.nDeleteriousSift;
+    document.getElementById('meanPpScore').value          = p.meanPpScore;
+    document.getElementById('nCosmicHits').value          = p.nCosmicHits;
+    document.getElementById('nRarePopulation').value      = p.nRarePopulation;
+    document.getElementById('nWithDomain').value          = p.nWithDomain;
+    document.getElementById('meanNCallers').value         = p.meanNCallers;
+
+    // Flash the active preset button
+    document.querySelectorAll('.preset-btn').forEach(b => b.style.fontWeight = '');
+    document.querySelector(`.preset-btn.${tier}`).style.fontWeight = '700';
+}
+
+// ── Initial values (median preset) ───────────────────────────────────────────
+applyPreset('median');
+</script>
+{% endblock %}
