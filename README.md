@@ -477,9 +477,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions, bug reports, or feature suggestions:
 
 - 📧 **Email:** [ahmednashaat777a@gmail.com]
-- 🐛 **Issue Tracker:** [GitHub Issues](https://github.com/repository/issues)
-- 💬 **Discussions:** [GitHub Discussions](https://github.com/repository/discussions)
-- 📖 **Documentation:** [Wiki](https://github.com/repository/wiki)
 
 ---
 
