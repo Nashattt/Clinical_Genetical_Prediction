@@ -96,12 +96,6 @@
                                         <option value="3">Hispanic / Latino</option>
                                         <option value="4">Other / Unknown</option>
                                     </select></div>
-                                    <div class="input-group"><label>Tumor Stage</label><select id="stage" class="neo-select">
-                                        <option value="0">Stage 0</option>
-                                        <option value="1">Stage I</option>
-                                        <option value="2" selected>Stage II</option>
-                                        <option value="3">Stage III</option>
-                                    </select></div>
                                 </div>
 
                                 <div class="form-section-label">📊 TMB &amp; Genome</div>
@@ -140,21 +134,10 @@
                                 </div>
                                 <div class="input-row">
                                     <div class="input-group"><label>Unique Chromosomes</label><input type="number" id="uniqueChromosomes" class="neo-input"></div>
-                                    <div class="input-group"><label>Missense Mutations</label><input type="number" id="missenseMutations" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean N-Callers</label><input type="number" id="meanNCallers" step="0.1" class="neo-input"></div>
                                 </div>
                                 <div class="input-row">
-                                    <div class="input-group"><label>Silent Mutations</label><input type="number" id="silentMutations" class="neo-input"></div>
-                                    <div class="input-group"><label>High Impact Mutations</label><input type="number" id="highImpactMutations" class="neo-input"></div>
-                                </div>
-
-                                <div class="form-section-label">⚡ Functional Impact</div>
-                                <div class="input-row">
-                                    <div class="input-group"><label>n MODERATE Impact</label><input type="number" id="nModerateImpact" class="neo-input"></div>
-                                    <div class="input-group"><label>n LOW Impact</label><input type="number" id="nLowImpact" class="neo-input"></div>
-                                </div>
-                                <div class="input-row">
-                                    <div class="input-group"><label>n MODIFIER Impact</label><input type="number" id="nModifierImpact" class="neo-input"></div>
-                                    <div class="input-group"><label>Mean Impact (0-3)</label><input type="number" id="meanImpactOrd" step="0.01" class="neo-input"></div>
+                                    <div class="input-group"><label>Max N-Callers</label><input type="number" id="maxNCallers" step="0.1" class="neo-input"></div>
                                 </div>
 
                                 <div class="form-section-label">🔬 Allele &amp; Sequencing</div>
@@ -163,8 +146,25 @@
                                     <div class="input-group"><label>Max VAF</label><input type="number" id="maxVAF" step="0.001" class="neo-input"></div>
                                 </div>
                                 <div class="input-row">
+                                    <div class="input-group"><label>Std VAF</label><input type="number" id="stdVAF" step="0.001" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean Tumor Alt Count</label><input type="number" id="meanTAltCount" step="0.1" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
                                     <div class="input-group"><label>Mean Tumor Depth</label><input type="number" id="meanTDepth" step="0.1" class="neo-input"></div>
                                     <div class="input-group"><label>Mean Normal Depth</label><input type="number" id="meanNDepth" step="0.1" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">⚡ Functional Impact</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n HIGH Impact</label><input type="number" id="nHighImpact" class="neo-input"></div>
+                                    <div class="input-group"><label>n MODERATE Impact</label><input type="number" id="nModerateImpact" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n LOW Impact</label><input type="number" id="nLowImpact" class="neo-input"></div>
+                                    <div class="input-group"><label>n MODIFIER Impact</label><input type="number" id="nModifierImpact" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Mean Impact (0-3)</label><input type="number" id="meanImpactOrd" step="0.01" class="neo-input"></div>
                                 </div>
 
                                 <div class="form-section-label">🧪 Protein Damage</div>
@@ -173,8 +173,39 @@
                                     <div class="input-group"><label>n Possibly Damaging</label><input type="number" id="nPossiblyDamaging" class="neo-input"></div>
                                 </div>
                                 <div class="input-row">
-                                    <div class="input-group"><label>n Deleterious (SIFT)</label><input type="number" id="nDeleteriousSift" class="neo-input"></div>
+                                    <div class="input-group"><label>n PolyPhen Benign</label><input type="number" id="nPpBenign" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean PolyPhen (0-2)</label><input type="number" id="meanPpOrd" step="0.01" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
                                     <div class="input-group"><label>Mean PolyPhen Score</label><input type="number" id="meanPpScore" step="0.001" class="neo-input"></div>
+                                    <div class="input-group"><label>Mean SIFT (0-2)</label><input type="number" id="meanSiftOrd" step="0.01" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>Mean SIFT Score</label><input type="number" id="meanSiftScore" step="0.001" class="neo-input"></div>
+                                    <div class="input-group"><label>n Deleterious (SIFT)</label><input type="number" id="nDeleteriousSift" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n Tolerated (SIFT)</label><input type="number" id="nToleratedSift" class="neo-input"></div>
+                                </div>
+
+                                <div class="form-section-label">🧷 Variant Consequence Flags</div>
+                                <div class="checkbox-grid">
+                                    <label class="chk"><input type="checkbox" id="hasStopGained"> Stop Gained</label>
+                                    <label class="chk"><input type="checkbox" id="hasFrameshift"> Frameshift</label>
+                                    <label class="chk"><input type="checkbox" id="hasSplice"> Splice Site</label>
+                                    <label class="chk"><input type="checkbox" id="hasUtrVariant"> UTR Variant</label>
+                                    <label class="chk"><input type="checkbox" id="hasIntronic"> Intronic</label>
+                                    <label class="chk"><input type="checkbox" id="hasDownstream"> Downstream</label>
+                                </div>
+
+                                <div class="form-section-label">🔢 Sequence Composition</div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n Synonymous</label><input type="number" id="nSynonymousCsq" class="neo-input"></div>
+                                    <div class="input-group"><label>n Non-synonymous</label><input type="number" id="nNonsynonymousCsq" class="neo-input"></div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group"><label>n SNP</label><input type="number" id="nSnp" class="neo-input"></div>
+                                    <div class="input-group"><label>n Indel</label><input type="number" id="nIndel" class="neo-input"></div>
                                 </div>
 
                                 <div class="form-section-label">🗄️ Database &amp; Annotation</div>
@@ -184,7 +215,6 @@
                                 </div>
                                 <div class="input-row">
                                     <div class="input-group"><label>n With Protein Domain</label><input type="number" id="nWithDomain" class="neo-input"></div>
-                                    <div class="input-group"><label>Mean N-Callers</label><input type="number" id="meanNCallers" step="0.1" class="neo-input"></div>
                                 </div>
                             </div>
 
@@ -263,10 +293,9 @@
                                 <tr>
                                     <th>Timestamp</th>
                                     <th>Age</th>
-                                    <th>Stage</th>
+                                    <th>Pred. Stage</th>
                                     <th>Total Mut</th>
-                                    <th>Missense</th>
-                                    <th>High Impact</th>
+                                    <th>TMB</th>
                                     <th>Risk Score</th>
                                     <th>Risk Category</th>
                                     <th>Med. Survival (mo)</th>
@@ -274,7 +303,7 @@
                             </thead>
                             <tbody id="fullHistoryList">
                                 <tr>
-                                    <td colspan="9" class="loading">Loading...</td>
+                                    <td colspan="8" class="loading">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -296,6 +325,20 @@
     margin: 14px 0 6px;
     padding-bottom: 4px;
     border-bottom: 1px solid rgba(0,255,157,0.15);
+}
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.checkbox-grid .chk {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #ccc;
+    cursor: pointer;
 }
 .input-row {
     display: grid;
@@ -495,12 +538,12 @@ function displayResults(result, inputData) {
             }).join('') +
         `</div>`;
     } else if (inputData) {
-        // Fallback: derive from raw counts
+        // Fallback: derive a rough split from total mutation burden
         const total = inputData.total_mutations || 1;
+        const dmg = (inputData.n_high_impact || 0) + (inputData.n_moderate_impact || 0);
         const bars = [
-            { label: 'High Impact', val: inputData.high_impact_mutations || 0, color: '#ff3366' },
-            { label: 'Missense',    val: inputData.missense_mutations    || 0, color: '#ffaa44' },
-            { label: 'Silent/Other',val: Math.max(0, total - (inputData.missense_mutations||0) - (inputData.high_impact_mutations||0)), color: '#00ff9d' }
+            { label: 'High/Moderate Impact', val: dmg, color: '#ff3366' },
+            { label: 'Low/Modifier Impact',  val: Math.max(0, total - dmg), color: '#00ff9d' }
         ];
         variantHtml = '<div style="margin:12px 0 4px">' + bars.map(b => {
             const pct = Math.round((b.val / total) * 100);
@@ -581,10 +624,9 @@ async function loadFullHistory() {
                 <tr class="clickable-row" data-input='${JSON.stringify(item.input)}' data-result='${JSON.stringify(item.result || {})}'>
                     <td>${timestamp}</td>
                     <td>${item.input.age}</td>
-                    <td>${item.input.stage_data}</td>
+                    <td>${item.result.predicted_stage || '—'}</td>
                     <td>${item.input.total_mutations}</td>
-                    <td>${item.input.missense_mutations}</td>
-                    <td>${item.input.high_impact_mutations}</td>
+                    <td>${item.input.tmb}</td>
                     <td>${item.result.risk_score}</td>
                     <td class="risk-${riskClass}">${item.result.risk_category}</td>
                     <td>${survival}</td>
@@ -602,7 +644,7 @@ async function loadFullHistory() {
             });
         });
     } else {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty">No history found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">No history found</td></tr>';
     }
 }
 
@@ -613,14 +655,13 @@ document.getElementById('exportHistoryBtn')?.addEventListener('click', async () 
         alert('No data to export');
         return;
     }
-    const headers = ['Timestamp', 'Age', 'Stage', 'Total Mutations', 'Missense', 'High Impact', 'Risk Score', 'Risk Category', 'Median Survival (months)'];
+    const headers = ['Timestamp', 'Age', 'Pred. Stage', 'Total Mutations', 'TMB', 'Risk Score', 'Risk Category', 'Median Survival (months)'];
     const rows = response.history.map(item => [
         new Date(item.timestamp).toLocaleString(),
         item.input.age,
-        item.input.stage_data,
+        item.result.predicted_stage || '',
         item.input.total_mutations,
-        item.input.missense_mutations,
-        item.input.high_impact_mutations,
+        item.input.tmb,
         item.result.risk_score,
         item.result.risk_category,
         item.result.median_survival_months || ''
@@ -659,7 +700,7 @@ function buildFeedItem(data, key) {
     logLine.innerHTML = `
         <span class="log-time">[${new Date(data.timestamp).toLocaleTimeString()}]</span>
         <span class="log-risk" style="color:${riskColor}">● ${data.result.risk_category}</span>
-        <span class="log-details">Age:${data.input.age} | Stage:${data.input.stage_data} | Mut:${data.input.total_mutations}</span>
+        <span class="log-details">Age:${data.input.age} | Stage:${data.result.predicted_stage || '—'} | Mut:${data.input.total_mutations}</span>
         <button class="feed-delete-btn" title="Delete" style="
             position:absolute;right:6px;top:50%;transform:translateY(-50%);
             background:none;border:none;color:#ff3366;cursor:pointer;
@@ -731,14 +772,14 @@ function initRealTimeFeed(uid) {
 
 // Prediction button (main)
 document.getElementById('predictBtn').addEventListener('click', async () => {
-    const g = id => parseFloat(document.getElementById(id).value) || 0;
+    const g  = id => parseFloat(document.getElementById(id).value) || 0;
     const gi = id => parseInt(document.getElementById(id).value) || 0;
+    const gc = id => document.getElementById(id).checked ? 1 : 0;
     const input = {
         // Clinical
         age:                     g('age'),
         sex_encoded:             gi('sex'),
         race_encoded:            gi('race'),
-        stage_data:              gi('stage'),
         tmb:                     g('tmb'),
         tmb_nonsynonymous:       g('tmbNonsyn'),
         fraction_genome_altered: g('fractionGenomeAltered'),
@@ -749,29 +790,50 @@ document.getElementById('predictBtn').addEventListener('click', async () => {
         winter_hypoxia_score:    g('winterHypoxia'),
         msi_mantis_score:        g('msiMantis'),
         msisensor_score:         g('msiSensor'),
-        // DNA
+        // Genomic — burden, calling, VAF
         total_mutations:         gi('totalMutations'),
         unique_genes:            gi('uniqueGenes'),
         unique_chromosomes:      gi('uniqueChromosomes'),
-        missense_mutations:      gi('missenseMutations'),
-        silent_mutations:        gi('silentMutations'),
-        high_impact_mutations:   gi('highImpactMutations'),
+        mean_ncallers:           g('meanNCallers'),
+        max_ncallers:            g('maxNCallers'),
+        mean_vaf:                g('meanVAF'),
+        max_vaf:                 g('maxVAF'),
+        std_vaf:                 g('stdVAF'),
+        mean_t_alt_count:        g('meanTAltCount'),
+        mean_t_depth:            g('meanTDepth'),
+        mean_n_depth:            g('meanNDepth'),
+        // Functional impact
+        n_high_impact:           gi('nHighImpact'),
         n_moderate_impact:       gi('nModerateImpact'),
         n_low_impact:            gi('nLowImpact'),
         n_modifier_impact:       gi('nModifierImpact'),
         mean_impact_ord:         g('meanImpactOrd'),
-        mean_vaf:                g('meanVAF'),
-        max_vaf:                 g('maxVAF'),
-        mean_t_depth:            g('meanTDepth'),
-        mean_n_depth:            g('meanNDepth'),
+        // Protein damage
         n_probably_damaging:     gi('nProbablyDamaging'),
         n_possibly_damaging:     gi('nPossiblyDamaging'),
-        n_deleterious_sift:      gi('nDeleteriousSift'),
+        n_pp_benign:             gi('nPpBenign'),
+        mean_pp_ord:             g('meanPpOrd'),
         mean_pp_score:           g('meanPpScore'),
+        mean_sift_ord:           g('meanSiftOrd'),
+        mean_sift_score:         g('meanSiftScore'),
+        n_deleterious_sift:      gi('nDeleteriousSift'),
+        n_tolerated_sift:        gi('nToleratedSift'),
+        // Variant consequence flags
+        has_stop_gained:         gc('hasStopGained'),
+        has_frameshift:          gc('hasFrameshift'),
+        has_splice:              gc('hasSplice'),
+        has_utr_variant:         gc('hasUtrVariant'),
+        has_intronic:            gc('hasIntronic'),
+        has_downstream:          gc('hasDownstream'),
+        // Sequence composition
+        n_synonymous_csq:        gi('nSynonymousCsq'),
+        n_nonsynonymous_csq:     gi('nNonsynonymousCsq'),
+        n_snp:                   gi('nSnp'),
+        n_indel:                 gi('nIndel'),
+        // Database & annotation
         n_cosmic_hits:           gi('nCosmicHits'),
         n_rare_population:       gi('nRarePopulation'),
         n_with_protein_domain:   gi('nWithDomain'),
-        mean_ncallers:           g('meanNCallers'),
     };
     if (!input.age || !input.total_mutations) return alert('Age and Total Mutations are required.');
     const btn = document.getElementById('predictBtn');
@@ -865,98 +927,73 @@ function switchTab(name, btn) {
 // ── Risk presets ──────────────────────────────────────────────────────────────
 const PRESETS = {
     low: {
-        // Clinical
-        age:60, sex:0, race:0, stage:1,
-        tmb:2.1, tmbNonsyn:1.8, fractionGenomeAltered:0.05,
+        age:55, sex:0, race:0,
+        tmb:60, tmbNonsyn:1.8, fractionGenomeAltered:0.05,
         aneuploidyScore:0.1, mutationCount:60,
         buffaHypoxia:0, ragnumHypoxia:0, winterHypoxia:0,
         msiMantis:0, msiSensor:0,
-        // DNA
         totalMutations:60, uniqueGenes:40, uniqueChromosomes:8,
-        missenseMutations:40, silentMutations:12, highImpactMutations:1,
-        nModerateImpact:40, nLowImpact:12, nModifierImpact:8,
-        meanImpactOrd:1.2, meanVAF:0.18, maxVAF:0.32,
+        meanNCallers:3.5, maxNCallers:4,
+        meanVAF:0.18, maxVAF:0.32, stdVAF:0.06, meanTAltCount:14,
         meanTDepth:120, meanNDepth:115,
-        nProbablyDamaging:10, nPossiblyDamaging:8,
-        nDeleteriousSift:18, meanPpScore:0.45,
-        nCosmicHits:0, nRarePopulation:55, nWithDomain:35, meanNCallers:3.5,
+        nHighImpact:1, nModerateImpact:40, nLowImpact:12, nModifierImpact:8, meanImpactOrd:1.0,
+        nProbablyDamaging:10, nPossiblyDamaging:8, nPpBenign:42, meanPpOrd:0.5, meanPpScore:0.30,
+        meanSiftOrd:1.8, meanSiftScore:0.35, nDeleteriousSift:14, nToleratedSift:46,
+        hasStopGained:0, hasFrameshift:0, hasSplice:0, hasUtrVariant:0, hasIntronic:0, hasDownstream:0,
+        nSynonymousCsq:18, nNonsynonymousCsq:42, nSnp:56, nIndel:4,
+        nCosmicHits:0, nRarePopulation:55, nWithDomain:35,
     },
     median: {
-        // Clinical
-        age:60, sex:0, race:0, stage:2,
-        tmb:5.2, tmbNonsyn:4.5, fractionGenomeAltered:0.15,
+        age:60, sex:0, race:0,
+        tmb:150, tmbNonsyn:4.5, fractionGenomeAltered:0.15,
         aneuploidyScore:0.5, mutationCount:150,
         buffaHypoxia:0, ragnumHypoxia:0, winterHypoxia:0,
         msiMantis:0, msiSensor:0,
-        // DNA
         totalMutations:150, uniqueGenes:80, uniqueChromosomes:12,
-        missenseMutations:90, silentMutations:28, highImpactMutations:5,
-        nModerateImpact:90, nLowImpact:30, nModifierImpact:25,
-        meanImpactOrd:1.8, meanVAF:0.28, maxVAF:0.55,
+        meanNCallers:4.0, maxNCallers:5,
+        meanVAF:0.28, maxVAF:0.55, stdVAF:0.12, meanTAltCount:28,
         meanTDepth:110, meanNDepth:105,
-        nProbablyDamaging:35, nPossiblyDamaging:20,
-        nDeleteriousSift:55, meanPpScore:0.72,
-        nCosmicHits:3, nRarePopulation:135, nWithDomain:80, meanNCallers:4.0,
+        nHighImpact:5, nModerateImpact:90, nLowImpact:30, nModifierImpact:25, meanImpactOrd:1.8,
+        nProbablyDamaging:35, nPossiblyDamaging:20, nPpBenign:30, meanPpOrd:1.1, meanPpScore:0.72,
+        meanSiftOrd:1.4, meanSiftScore:0.04, nDeleteriousSift:55, nToleratedSift:25,
+        hasStopGained:0, hasFrameshift:0, hasSplice:0, hasUtrVariant:0, hasIntronic:0, hasDownstream:0,
+        nSynonymousCsq:28, nNonsynonymousCsq:90, nSnp:140, nIndel:10,
+        nCosmicHits:3, nRarePopulation:135, nWithDomain:80,
     },
     high: {
-        // Clinical
-        age:72, sex:1, race:0, stage:3,
-        tmb:18.5, tmbNonsyn:16.2, fractionGenomeAltered:0.52,
+        age:72, sex:1, race:0,
+        tmb:480, tmbNonsyn:16.2, fractionGenomeAltered:0.52,
         aneuploidyScore:2.1, mutationCount:480,
         buffaHypoxia:-12.3, ragnumHypoxia:-8.7, winterHypoxia:-10.1,
         msiMantis:0.42, msiSensor:8.5,
-        // DNA
         totalMutations:480, uniqueGenes:210, uniqueChromosomes:19,
-        missenseMutations:320, silentMutations:60, highImpactMutations:28,
-        nModerateImpact:320, nLowImpact:60, nModifierImpact:72,
-        meanImpactOrd:2.6, meanVAF:0.47, maxVAF:0.82,
+        meanNCallers:4.8, maxNCallers:6,
+        meanVAF:0.47, maxVAF:0.82, stdVAF:0.22, meanTAltCount:68,
         meanTDepth:95, meanNDepth:88,
-        nProbablyDamaging:140, nPossiblyDamaging:75,
-        nDeleteriousSift:210, meanPpScore:0.91,
-        nCosmicHits:14, nRarePopulation:430, nWithDomain:260, meanNCallers:4.8,
+        nHighImpact:28, nModerateImpact:320, nLowImpact:60, nModifierImpact:72, meanImpactOrd:2.6,
+        nProbablyDamaging:140, nPossiblyDamaging:75, nPpBenign:25, meanPpOrd:1.8, meanPpScore:0.91,
+        meanSiftOrd:0.6, meanSiftScore:0.01, nDeleteriousSift:210, nToleratedSift:30,
+        hasStopGained:1, hasFrameshift:1, hasSplice:1, hasUtrVariant:0, hasIntronic:1, hasDownstream:0,
+        nSynonymousCsq:60, nNonsynonymousCsq:320, nSnp:430, nIndel:50,
+        nCosmicHits:14, nRarePopulation:430, nWithDomain:260,
     }
 };
 
 function applyPreset(tier) {
     const p = PRESETS[tier];
-    // Clinical tab
-    document.getElementById('age').value                  = p.age;
-    document.getElementById('sex').value                  = p.sex;
-    document.getElementById('race').value                 = p.race;
-    document.getElementById('stage').value                = p.stage;
-    document.getElementById('tmb').value                  = p.tmb;
-    document.getElementById('tmbNonsyn').value            = p.tmbNonsyn;
-    document.getElementById('fractionGenomeAltered').value= p.fractionGenomeAltered;
-    document.getElementById('aneuploidyScore').value      = p.aneuploidyScore;
-    document.getElementById('mutationCount').value        = p.mutationCount;
-    document.getElementById('buffaHypoxia').value         = p.buffaHypoxia;
-    document.getElementById('ragnumHypoxia').value        = p.ragnumHypoxia;
-    document.getElementById('winterHypoxia').value        = p.winterHypoxia;
-    document.getElementById('msiMantis').value            = p.msiMantis;
-    document.getElementById('msiSensor').value            = p.msiSensor;
-    // DNA tab
-    document.getElementById('totalMutations').value       = p.totalMutations;
-    document.getElementById('uniqueGenes').value          = p.uniqueGenes;
-    document.getElementById('uniqueChromosomes').value    = p.uniqueChromosomes;
-    document.getElementById('missenseMutations').value    = p.missenseMutations;
-    document.getElementById('silentMutations').value      = p.silentMutations;
-    document.getElementById('highImpactMutations').value  = p.highImpactMutations;
-    document.getElementById('nModerateImpact').value      = p.nModerateImpact;
-    document.getElementById('nLowImpact').value           = p.nLowImpact;
-    document.getElementById('nModifierImpact').value      = p.nModifierImpact;
-    document.getElementById('meanImpactOrd').value        = p.meanImpactOrd;
-    document.getElementById('meanVAF').value              = p.meanVAF;
-    document.getElementById('maxVAF').value               = p.maxVAF;
-    document.getElementById('meanTDepth').value           = p.meanTDepth;
-    document.getElementById('meanNDepth').value           = p.meanNDepth;
-    document.getElementById('nProbablyDamaging').value    = p.nProbablyDamaging;
-    document.getElementById('nPossiblyDamaging').value    = p.nPossiblyDamaging;
-    document.getElementById('nDeleteriousSift').value     = p.nDeleteriousSift;
-    document.getElementById('meanPpScore').value          = p.meanPpScore;
-    document.getElementById('nCosmicHits').value          = p.nCosmicHits;
-    document.getElementById('nRarePopulation').value      = p.nRarePopulation;
-    document.getElementById('nWithDomain').value          = p.nWithDomain;
-    document.getElementById('meanNCallers').value         = p.meanNCallers;
+    const numIds = ['age','sex','race','tmb','tmbNonsyn','fractionGenomeAltered','aneuploidyScore',
+        'mutationCount','buffaHypoxia','ragnumHypoxia','winterHypoxia','msiMantis','msiSensor',
+        'totalMutations','uniqueGenes','uniqueChromosomes','meanNCallers','maxNCallers',
+        'meanVAF','maxVAF','stdVAF','meanTAltCount','meanTDepth','meanNDepth',
+        'nHighImpact','nModerateImpact','nLowImpact','nModifierImpact','meanImpactOrd',
+        'nProbablyDamaging','nPossiblyDamaging','nPpBenign','meanPpOrd','meanPpScore',
+        'meanSiftOrd','meanSiftScore','nDeleteriousSift','nToleratedSift',
+        'nSynonymousCsq','nNonsynonymousCsq','nSnp','nIndel',
+        'nCosmicHits','nRarePopulation','nWithDomain'];
+    numIds.forEach(id => { document.getElementById(id).value = p[id]; });
+
+    const chkIds = ['hasStopGained','hasFrameshift','hasSplice','hasUtrVariant','hasIntronic','hasDownstream'];
+    chkIds.forEach(id => { document.getElementById(id).checked = !!p[id]; });
 
     // Flash the active preset button
     document.querySelectorAll('.preset-btn').forEach(b => b.style.fontWeight = '');

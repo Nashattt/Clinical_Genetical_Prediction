@@ -37,37 +37,17 @@ def login_required(f):
     return decorated_function
 
 def _build_row(col_list, features):
-    """Zero-init from exact pkl cols → fill via aliases + direct match + variant_* fallback."""
+    """Zero-init from exact pkl cols, fill via alias map + direct name match."""
     FIELD_MAP = {
-        'age':'Diagnosis Age','fraction_genome_altered':'Fraction Genome Altered',
-        'aneuploidy_score':'Aneuploidy Score','buffa_hypoxia_score':'Buffa Hypoxia Score',
-        'ragnum_hypoxia_score':'Ragnum Hypoxia Score','winter_hypoxia_score':'Winter Hypoxia Score',
-        'msi_mantis_score':'MSI MANTIS Score','msisensor_score':'MSIsensor Score',
-        'mutation_count':'Mutation Count','tmb_nonsynonymous':'TMB (nonsynonymous)',
-        'sex_encoded':'Sex_encoded','race_encoded':'Race_encoded',
-        'total_mutations':'total_mutations','unique_genes':'unique_genes',
-        'missense_mutations':'missense_mutations','silent_mutations':'silent_mutations',
-        'high_impact_mutations':'high_impact_mutations','tmb':'tmb',
-        'unique_chromosomes':'unique_chromosomes',
-        'n_moderate_impact':'n_MODERATE_impact','n_low_impact':'n_LOW_impact',
-        'n_modifier_impact':'n_MODIFIER_impact','n_high_impact':'n_HIGH_impact',
-        'mean_impact_ord':'mean_impact_ord','max_impact_ord':'max_impact_ord',
-        'mean_vaf':'mean_VAF','max_vaf':'max_VAF','std_vaf':'std_VAF',
-        'mean_t_depth':'mean_t_depth','mean_n_depth':'mean_n_depth',
-        'mean_t_alt_count':'mean_t_alt_count',
-        'mean_pp_ord':'mean_pp_ord','mean_pp_score':'mean_pp_score',
-        'n_probably_damaging':'n_probably_damaging','n_possibly_damaging':'n_possibly_damaging',
-        'n_pp_benign':'n_pp_benign','mean_sift_ord':'mean_sift_ord',
-        'mean_sift_score':'mean_sift_score','n_deleterious_sift':'n_deleterious_sift',
-        'n_tolerated_sift':'n_tolerated_sift','has_stop_gained':'has_stop_gained',
-        'has_frameshift':'has_frameshift','has_splice':'has_splice',
-        'has_utr_variant':'has_utr_variant','has_intronic':'has_intronic',
-        'has_downstream':'has_downstream','n_synonymous_csq':'n_synonymous_csq',
-        'n_nonsynonymous_csq':'n_nonsynonymous_csq','ratio_nonsyn_syn':'ratio_nonsyn_syn',
-        'n_snp':'n_snp','n_indel':'n_indel','snp_fraction':'snp_fraction',
-        'n_cosmic_hits':'n_cosmic_hits','n_rare_population':'n_rare_population',
-        'n_with_protein_domain':'n_with_protein_domain','domain_coverage_frac':'domain_coverage_frac',
-        'mean_ncallers':'mean_ncallers','max_ncallers':'max_ncallers',
+        'age': 'Diagnosis Age', 'fraction_genome_altered': 'Fraction Genome Altered',
+        'aneuploidy_score': 'Aneuploidy Score', 'buffa_hypoxia_score': 'Buffa Hypoxia Score',
+        'ragnum_hypoxia_score': 'Ragnum Hypoxia Score', 'winter_hypoxia_score': 'Winter Hypoxia Score',
+        'msi_mantis_score': 'MSI MANTIS Score', 'msisensor_score': 'MSIsensor Score',
+        'mutation_count': 'Mutation Count', 'tmb_nonsynonymous': 'TMB (nonsynonymous)',
+        'sex_encoded': 'Sex_encoded', 'race_encoded': 'Race_encoded',
+        'mean_vaf': 'mean_VAF', 'max_vaf': 'max_VAF', 'std_vaf': 'std_VAF',
+        'n_high_impact': 'n_HIGH_impact', 'n_moderate_impact': 'n_MODERATE_impact',
+        'n_low_impact': 'n_LOW_impact', 'n_modifier_impact': 'n_MODIFIER_impact',
     }
     row = {col: 0.0 for col in col_list}
     for col in col_list:
@@ -76,19 +56,16 @@ def _build_row(col_list, features):
     for k, v in FIELD_MAP.items():
         if k in features and v in row:
             row[v] = float(features[k])
+
     total = float(features.get('total_mutations', 1)) or 1
-    for vcol, val in {
-        "variant_Missense_Mutation": features.get('missense_mutations', 0),
-        "variant_Silent":            features.get('silent_mutations', 0),
-        "variant_Nonsense_Mutation": features.get('high_impact_mutations', 0),
-        "variant_3'UTR":0,"variant_5'UTR":0,"variant_Intron":0,
-        "variant_Frame_Shift_Del":0,"variant_Splice_Site":0,
-        "variant_In_Frame_Del":0,"variant_In_Frame_Ins":0,
-    }.items():
-        if vcol in row:
-            row[vcol] = float(val)
     if 'domain_coverage_frac' in row and row['domain_coverage_frac'] == 0.0:
         row['domain_coverage_frac'] = float(features.get('n_with_protein_domain', 0)) / total
+    if 'snp_fraction' in row and row['snp_fraction'] == 0.0:
+        n_snp, n_indel = float(features.get('n_snp', 0)), float(features.get('n_indel', 0))
+        row['snp_fraction'] = n_snp / (n_snp + n_indel) if (n_snp + n_indel) else 0.0
+    if 'ratio_nonsyn_syn' in row and row['ratio_nonsyn_syn'] == 0.0:
+        n_syn = float(features.get('n_synonymous_csq', 0))
+        row['ratio_nonsyn_syn'] = float(features.get('n_nonsynonymous_csq', 0)) / n_syn if n_syn else 0.0
     return row
 
 
@@ -317,67 +294,96 @@ def predict():
     """Run prediction and store results in Firestore & Realtime DB"""
     try:
         data = request.get_json()
-        
-        # Extract & validate core fields
-        age               = float(data['age'])
-        stage_data        = int(data['stage_data'])
-        total_mutations   = int(data['total_mutations'])
-        missense_mutations = int(data['missense_mutations'])
-        high_impact_mutations = int(data['high_impact_mutations'])
+
+        age = float(data['age'])
+        total_mutations = float(data['total_mutations'])
 
         if not (0 <= age <= 120):
             return jsonify({'error': 'Invalid age'}), 400
-        if stage_data not in [0, 1, 2, 3]:
-            return jsonify({'error': 'Stage must be 0-3'}), 400
-        if total_mutations < 0 or missense_mutations < 0 or high_impact_mutations < 0:
-            return jsonify({'error': 'Mutations cannot be negative'}), 400
-        if missense_mutations > total_mutations or high_impact_mutations > total_mutations:
-            return jsonify({'error': 'Mutation counts exceed total'}), 400
+        if total_mutations < 0:
+            return jsonify({'error': 'Total mutations cannot be negative'}), 400
 
-        # Build full feature dict (all notebook fields)
+        def g(key, default):
+            return float(data.get(key, default))
+
         features = {
+            # Clinical
             'age':                     age,
-            'stage_data':              stage_data,
-            'total_mutations':         total_mutations,
-            'missense_mutations':      missense_mutations,
-            'high_impact_mutations':   high_impact_mutations,
-            'unique_genes':            float(data.get('unique_genes', 80)),
-            'silent_mutations':        float(data.get('silent_mutations', 30)),
-            'tmb':                     float(data.get('tmb', 5.2)),
-            'tmb_nonsynonymous':       float(data.get('tmb_nonsynonymous', 4.5)),
-            'mutation_count':          float(data.get('mutation_count', total_mutations)),
-            'fraction_genome_altered': float(data.get('fraction_genome_altered', 0.15)),
-            'aneuploidy_score':        float(data.get('aneuploidy_score', 0.5)),
-            'buffa_hypoxia_score':     float(data.get('buffa_hypoxia_score', 0.0)),
-            'ragnum_hypoxia_score':    float(data.get('ragnum_hypoxia_score', 0.0)),
-            'winter_hypoxia_score':    float(data.get('winter_hypoxia_score', 0.0)),
-            'msi_mantis_score':        float(data.get('msi_mantis_score', 0.0)),
-            'msisensor_score':         float(data.get('msisensor_score', 0.0)),
             'sex_encoded':             int(data.get('sex_encoded', 0)),
             'race_encoded':            int(data.get('race_encoded', 0)),
+            'fraction_genome_altered': g('fraction_genome_altered', 0.15),
+            'aneuploidy_score':        g('aneuploidy_score', 0.5),
+            'mutation_count':          g('mutation_count', total_mutations),
+            'tmb_nonsynonymous':       g('tmb_nonsynonymous', 4.5),
+            'buffa_hypoxia_score':     g('buffa_hypoxia_score', 0.0),
+            'ragnum_hypoxia_score':    g('ragnum_hypoxia_score', 0.0),
+            'winter_hypoxia_score':    g('winter_hypoxia_score', 0.0),
+            'msi_mantis_score':        g('msi_mantis_score', 0.0),
+            'msisensor_score':         g('msisensor_score', 0.0),
+            # Genomic — burden, calling, VAF
+            'total_mutations':         total_mutations,
+            'unique_genes':            g('unique_genes', 80.0),
+            'unique_chromosomes':      g('unique_chromosomes', 12.0),
+            'tmb':                     g('tmb', 150.0),
+            'mean_vaf':                g('mean_vaf', 0.28),
+            'max_vaf':                 g('max_vaf', 0.55),
+            'std_vaf':                 g('std_vaf', 0.12),
+            'mean_t_depth':            g('mean_t_depth', 110.0),
+            'mean_n_depth':            g('mean_n_depth', 105.0),
+            'mean_t_alt_count':        g('mean_t_alt_count', 28.0),
+            # Functional impact
+            'mean_impact_ord':         g('mean_impact_ord', 1.8),
+            'n_high_impact':           g('n_high_impact', 5.0),
+            'n_moderate_impact':       g('n_moderate_impact', 90.0),
+            'n_low_impact':            g('n_low_impact', 30.0),
+            'n_modifier_impact':       g('n_modifier_impact', 25.0),
+            # Protein damage prediction
+            'mean_pp_ord':             g('mean_pp_ord', 1.1),
+            'mean_pp_score':           g('mean_pp_score', 0.72),
+            'n_probably_damaging':     g('n_probably_damaging', 35.0),
+            'n_possibly_damaging':     g('n_possibly_damaging', 20.0),
+            'n_pp_benign':             g('n_pp_benign', 30.0),
+            'mean_sift_ord':           g('mean_sift_ord', 1.4),
+            'mean_sift_score':         g('mean_sift_score', 0.04),
+            'n_deleterious_sift':      g('n_deleterious_sift', 55.0),
+            'n_tolerated_sift':        g('n_tolerated_sift', 25.0),
+            # Variant consequence flags
+            'has_stop_gained':         int(data.get('has_stop_gained', 0)),
+            'has_frameshift':          int(data.get('has_frameshift', 0)),
+            'has_splice':              int(data.get('has_splice', 0)),
+            'has_utr_variant':         int(data.get('has_utr_variant', 0)),
+            'has_intronic':            int(data.get('has_intronic', 0)),
+            'has_downstream':          int(data.get('has_downstream', 0)),
+            # Sequence composition
+            'n_synonymous_csq':        g('n_synonymous_csq', 28.0),
+            'n_nonsynonymous_csq':     g('n_nonsynonymous_csq', 90.0),
+            'n_snp':                   g('n_snp', 140.0),
+            'n_indel':                 g('n_indel', 10.0),
+            # Database & annotation
+            'n_cosmic_hits':           g('n_cosmic_hits', 3.0),
+            'n_rare_population':       g('n_rare_population', 135.0),
+            'n_with_protein_domain':   g('n_with_protein_domain', 80.0),
+            'mean_ncallers':           g('mean_ncallers', 4.0),
+            'max_ncallers':            g('max_ncallers', 5.0),
         }
 
-        # Make prediction
         result = predict_risk(features)
 
-        # Store under /predictions/{uid}/ — matches RTDB rules
         user_id = session['user_id']
         rt_ref = db.reference(f'/predictions/{user_id}')
         rt_ref.push({
             'userEmail': session.get('user_email'),
             'timestamp': datetime.utcnow().isoformat(),
-            'input':     {k: v for k, v in features.items()},
+            'input':     features,
             'result':    result,
         })
-        
-        
-        
+
         return jsonify({
             'success': True,
             'result': result,
             'message': 'Prediction stored successfully'
         })
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
