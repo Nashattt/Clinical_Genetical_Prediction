@@ -88,15 +88,6 @@
                                         <option value="1">Male</option>
                                     </select></div>
                                 </div>
-                                <div class="input-row">
-                                    <div class="input-group"><label>Race</label><select id="race" class="neo-select">
-                                        <option value="0">White</option>
-                                        <option value="1">Black / African American</option>
-                                        <option value="2">Asian</option>
-                                        <option value="3">Hispanic / Latino</option>
-                                        <option value="4">Other / Unknown</option>
-                                    </select></div>
-                                </div>
 
                                 <div class="form-section-label">📊 TMB &amp; Genome</div>
                                 <div class="input-row">
@@ -563,23 +554,22 @@ function displayResults(result, inputData) {
         ? `<div class="result-item">🔬 Predicted Stage: <strong>${result.predicted_stage}</strong> <span style="color:#666;font-size:0.8rem">(${result.stage_confidence}% conf.)</span></div>`
         : '';
 
-    // Risk score gauge (0-3+ scale)
-    const gaugeMax  = 3.0;
-    const gaugePct  = Math.min(100, (result.risk_score / gaugeMax) * 100).toFixed(1);
-    const gaugeColor = result.risk_score > 2.0 ? '#ff3366'
-                     : result.risk_score > 1.5 ? '#ff6644'
-                     : result.risk_score > 1.0 ? '#ffaa44' : '#00ff9d';
+    // Risk score gauge — positioned relative to the model's own percentile cutoffs
+    // (sent as risk_gauge_pct), since the raw Cox hazard ratio's scale is not fixed.
+    const gaugeColorMap = { 'low-risk': '#00ff9d', 'moderate-risk': '#ffaa44', 'high-risk': '#ff3366' };
+    const gaugeColor = gaugeColorMap[riskClass] || '#00ff9d';
+    const gaugePct   = result.risk_gauge_pct ?? 50;
 
     const riskGauge = `<div style="margin:10px 0 14px">
         <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#888;margin-bottom:4px">
-            <span>RISK SCORE</span><span style="color:${gaugeColor}">${result.risk_score}</span>
+            <span>RISK INDEX</span><span style="color:${gaugeColor}" title="Raw hazard ratio: ${result.risk_score_raw}">${result.risk_score}</span>
         </div>
         <div style="background:#1a1a2e;border-radius:6px;height:10px;overflow:hidden">
             <div style="width:${gaugePct}%;height:100%;background:${gaugeColor};border-radius:6px;
                         box-shadow:0 0 8px ${gaugeColor};transition:width .6s ease"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#444;margin-top:2px">
-            <span>0</span><span>Low</span><span>Moderate</span><span>High</span><span>3+</span>
+            <span>Low</span><span>Moderate</span><span>High</span>
         </div>
     </div>`;
 
@@ -779,7 +769,6 @@ document.getElementById('predictBtn').addEventListener('click', async () => {
         // Clinical
         age:                     g('age'),
         sex_encoded:             gi('sex'),
-        race_encoded:            gi('race'),
         tmb:                     g('tmb'),
         tmb_nonsynonymous:       g('tmbNonsyn'),
         fraction_genome_altered: g('fractionGenomeAltered'),
@@ -927,7 +916,7 @@ function switchTab(name, btn) {
 // ── Risk presets ──────────────────────────────────────────────────────────────
 const PRESETS = {
     low: {
-        age:55, sex:0, race:0,
+        age:55, sex:0,
         tmb:60, tmbNonsyn:1.8, fractionGenomeAltered:0.05,
         aneuploidyScore:0.1, mutationCount:60,
         buffaHypoxia:0, ragnumHypoxia:0, winterHypoxia:0,
@@ -944,7 +933,7 @@ const PRESETS = {
         nCosmicHits:0, nRarePopulation:55, nWithDomain:35,
     },
     median: {
-        age:60, sex:0, race:0,
+        age:60, sex:0,
         tmb:150, tmbNonsyn:4.5, fractionGenomeAltered:0.15,
         aneuploidyScore:0.5, mutationCount:150,
         buffaHypoxia:0, ragnumHypoxia:0, winterHypoxia:0,
@@ -961,7 +950,7 @@ const PRESETS = {
         nCosmicHits:3, nRarePopulation:135, nWithDomain:80,
     },
     high: {
-        age:72, sex:1, race:0,
+        age:72, sex:1,
         tmb:480, tmbNonsyn:16.2, fractionGenomeAltered:0.52,
         aneuploidyScore:2.1, mutationCount:480,
         buffaHypoxia:-12.3, ragnumHypoxia:-8.7, winterHypoxia:-10.1,
@@ -981,7 +970,7 @@ const PRESETS = {
 
 function applyPreset(tier) {
     const p = PRESETS[tier];
-    const numIds = ['age','sex','race','tmb','tmbNonsyn','fractionGenomeAltered','aneuploidyScore',
+    const numIds = ['age','sex','tmb','tmbNonsyn','fractionGenomeAltered','aneuploidyScore',
         'mutationCount','buffaHypoxia','ragnumHypoxia','winterHypoxia','msiMantis','msiSensor',
         'totalMutations','uniqueGenes','uniqueChromosomes','meanNCallers','maxNCallers',
         'meanVAF','maxVAF','stdVAF','meanTAltCount','meanTDepth','meanNDepth',

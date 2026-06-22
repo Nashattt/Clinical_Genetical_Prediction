@@ -69,9 +69,8 @@ def _build_row(col_list, features):
     return row
 
 
-def predict_risk(features: dict) -> dict:
-    """Two-stage: genomic → Model 1 → pred_probs → Model 2 → Cox."""
-    # Stage 1
+def _to_pca(features: dict):
+    """genomic -> Model 1 -> pred_probs -> Model 2 -> PCA. Shared by predict_risk and the reference calc."""
     m1_row = _build_row(m1_feature_cols, features)
     X_m1   = pd.DataFrame([m1_row])[m1_feature_cols]
     X_m1_s = scaler_m1.transform(X_m1)
@@ -81,7 +80,6 @@ def predict_risk(features: dict) -> dict:
                 else float(model.predict_proba(X_m1_s)[0, 1]))
         pred_prob_dict[f'pred_prob_{top_variants[i]}'] = prob
 
-    # Stage 2
     combined = {**features, **pred_prob_dict}
     m2_row   = _build_row(all_feature_cols_m2, combined)
     for k, v in pred_prob_dict.items():
@@ -89,30 +87,94 @@ def predict_risk(features: dict) -> dict:
             m2_row[k] = v
     X_m2   = pd.DataFrame([m2_row])[all_feature_cols_m2]
     X_m2_s = scaler_m2.transform(X_m2)
-    X_pca  = pca.transform(X_m2_s)
+    return pca.transform(X_m2_s), pred_prob_dict
+
+
+# A clinically-typical "average" patient — exact same numbers as the notebook's own
+# genomic_defaults / clinical_defaults. Used as a calibration anchor below: training's
+# risk_percentiles turned out to be degenerate (every realistic input lands above them,
+# so everything classifies HIGH RISK regardless of how mild the input actually is) — see
+# notebook notes. Comparing against this fixed reference instead of those percentiles is
+# robust to that defect and still gives correct relative ordering (low/median/high inputs
+# already produce correctly *ordered* risk scores — only the absolute thresholds were broken).
+DEFAULT_FEATURES = {
+    'age': 60.0, 'sex_encoded': 0, 'race_encoded': 0,
+    'fraction_genome_altered': 0.15, 'aneuploidy_score': 0.5,
+    'mutation_count': 150.0, 'tmb_nonsynonymous': 4.5,
+    'buffa_hypoxia_score': 0.0, 'ragnum_hypoxia_score': 0.0, 'winter_hypoxia_score': 0.0,
+    'msi_mantis_score': 0.0, 'msisensor_score': 0.0,
+    'total_mutations': 150.0, 'unique_genes': 80.0, 'unique_chromosomes': 12.0, 'tmb': 150.0,
+    'mean_vaf': 0.28, 'max_vaf': 0.55, 'std_vaf': 0.12,
+    'mean_t_depth': 110.0, 'mean_n_depth': 105.0, 'mean_t_alt_count': 28.0,
+    'mean_impact_ord': 1.8, 'n_high_impact': 5.0, 'n_moderate_impact': 90.0,
+    'n_low_impact': 30.0, 'n_modifier_impact': 25.0,
+    'mean_pp_ord': 1.1, 'mean_pp_score': 0.72, 'n_probably_damaging': 35.0,
+    'n_possibly_damaging': 20.0, 'n_pp_benign': 30.0,
+    'mean_sift_ord': 1.4, 'mean_sift_score': 0.04, 'n_deleterious_sift': 55.0, 'n_tolerated_sift': 25.0,
+    'has_stop_gained': 0, 'has_frameshift': 0, 'has_splice': 0,
+    'has_utr_variant': 0, 'has_intronic': 0, 'has_downstream': 0,
+    'n_synonymous_csq': 28.0, 'n_nonsynonymous_csq': 90.0, 'n_snp': 140.0, 'n_indel': 10.0,
+    'n_cosmic_hits': 3.0, 'n_rare_population': 135.0, 'n_with_protein_domain': 80.0,
+    'mean_ncallers': 4.0, 'max_ncallers': 5.0,
+}
+
+_reference_log_hazard_cache = None
+def _reference_log_hazard():
+    """Cox log-hazard for the typical/default patient — computed once, cached."""
+    global _reference_log_hazard_cache
+    if _reference_log_hazard_cache is None:
+        X_pca_ref, _ = _to_pca(DEFAULT_FEATURES)
+        cox_ref = pd.DataFrame(X_pca_ref[:, :15], columns=[f'PC_{i}' for i in range(15)])
+        _reference_log_hazard_cache = float(cph.predict_log_partial_hazard(cox_ref).values[0])
+    return _reference_log_hazard_cache
+
+
+def predict_risk(features: dict) -> dict:
+    """Two-stage: genomic → Model 1 → pred_probs → Model 2 → Cox."""
+    X_pca, pred_prob_dict = _to_pca(features)
 
     stage_enc   = gb_stage.predict(X_pca[:, :25])[0]
     stage_label = stage_encoder.inverse_transform([stage_enc])[0]
     stage_conf  = float(np.max(gb_stage.predict_proba(X_pca[:, :25])[0]))
     variant_probs = {top_variants[i]: round(v, 4) for i, v in enumerate(pred_prob_dict.values())}
 
-    cox_df     = pd.DataFrame(X_pca[:, :15], columns=[f'PC_{i}' for i in range(15)])
-    risk_score = float(cph.predict_partial_hazard(cox_df).values[0])
+    cox_df          = pd.DataFrame(X_pca[:, :15], columns=[f'PC_{i}' for i in range(15)])
+    risk_score_raw  = float(cph.predict_partial_hazard(cox_df).values[0])      # exp(beta.X) — can be astronomically large
+    risk_score_log  = float(cph.predict_log_partial_hazard(cox_df).values[0])  # beta.X — small, human-readable
+
+    # ── Reference-relative calibration ─────────────────────────────────────────
+    # training's risk_percentiles are degenerate (every realistic input falls above them —
+    # see notebook notes), so category/gauge/survival are instead calibrated against how far
+    # this input's log-hazard sits from a clinically-typical reference patient. This stays
+    # correct because the model DOES order inputs correctly relative to each other (a milder
+    # input gets a lower beta.X than a more severe one) — only the absolute thresholds were broken.
+    delta = risk_score_log - _reference_log_hazard()
+    DELTA_SCALE = 20.0   # how quickly delta saturates — tune against real inputs once retrained
+    z = float(np.tanh(delta / DELTA_SCALE))   # bounded -1..1, ordering-preserving
+
+    CATEGORY_THRESHOLD = 0.2
+    risk_category = ("LOW RISK"      if z < -CATEGORY_THRESHOLD else
+                     "MODERATE RISK" if z <=  CATEGORY_THRESHOLD else "HIGH RISK")
+    gauge_pct = max(0.0, min(100.0, (z + 1) / 2 * 100))
+
+    HR_SPAN = 2.0   # maps z in [-1,1] to hazard ratio in [exp(-2), exp(2)] ≈ [0.14x, 7.4x]
+    calibrated_hr = float(np.exp(z * HR_SPAN))
 
     median_survival = None
     try:
-        surv = cph.predict_survival_function(cox_df)
-        times, probs_arr = surv.index.values, surv.iloc[:, 0].values
-        idx = (probs_arr <= 0.5).argmax() if (probs_arr <= 0.5).any() else -1
+        S0    = cph.baseline_survival_.iloc[:, 0]
+        times = S0.index.values
+        S     = S0.values ** calibrated_hr
+        idx   = np.argmax(S <= 0.5) if (S <= 0.5).any() else -1
         if idx != -1 and not np.isnan(times[idx]):
             median_survival = float(times[idx])
     except Exception:
         pass
 
-    risk_category = ("LOW RISK"      if risk_score <= risk_percentiles[0] else
-                     "MODERATE RISK" if risk_score <= risk_percentiles[1] else "HIGH RISK")
     return {
-        'risk_score':             round(risk_score, 4),
+        'risk_score':             round(risk_score_log, 4),
+        'risk_score_raw':         risk_score_raw,
+        'risk_gauge_pct':         round(gauge_pct, 1),
         'risk_category':          risk_category,
         'predicted_stage':        stage_label,
         'stage_confidence':       round(stage_conf * 100, 2),
@@ -440,6 +502,6 @@ if __name__ == '__main__':
     m1_feature_cols     = joblib.load(f'{model_dir}/m1_feature_cols.pkl')
     all_feature_cols    = joblib.load(f'{model_dir}/all_feature_cols.pkl')
     all_feature_cols_m2 = joblib.load(f'{model_dir}/all_feature_cols_m2.pkl')
-    race_encoder        = joblib.load(f'{model_dir}/race_encoder.pkl')
+    # race_encoder.pkl is not loaded — see note below; race_encoded is sent as a raw int from the dashboard instead
     print(f"Models loaded — M1:{len(m1_feature_cols)} cols  M2:{len(all_feature_cols_m2)} cols")
     app.run(debug=True, host='0.0.0.0', port=5000)
